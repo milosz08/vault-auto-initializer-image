@@ -1,7 +1,5 @@
 #!/bin/bash
 
-declare -a secrets
-
 echo "Staring Vault auto-init configuration loader..."
 echo "by Miłosz Gilga <https://miloszgilga.pl>"
 
@@ -61,14 +59,12 @@ for kv_storage in $(env | grep "^KV_"); do
     done
   fi
 
-  if [[ -n "$string" ]]; then
+  if [[ -n "$secrets_data" ]]; then
     vault kv put "$kv_engine/$kv_storage_name" $secrets_data > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
       echo "Put KV secrets count: $count into KV: \"$kv_engine/$kv_storage\""
     fi
   fi
 done
-
-echo "Inserted: ${#secret_values[@]} KV secrets."
 
 wait $vault_daemon_pid
