@@ -50,8 +50,8 @@ services:
       VAULT_AUTO_INIT_ROOT_TOKEN: # <optional, by default: 'admin'>
       VAULT_AUTO_INIT_KV_ENGINE: # <optional, by default: 'dev'>
       # kv storages
-      KV_STORAGE_0: core
-      KV_STORAGE_1: common
+      KV_STORAGE_0: service1
+      KV_STORAGE_1: service2
       # kv secrets
       V_SECRET_TOKEN_0: SuperSecretToken0
       V_SECRET_TOKEN_1: SuperSecretToken1
