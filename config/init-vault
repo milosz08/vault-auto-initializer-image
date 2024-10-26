@@ -1,0 +1,79 @@
+#!/bin/bash
+
+declare -A secret_values
+declare -A secret_storages
+
+echo "Staring Vault auto-init configuration loader..."
+echo "by Miłosz Gilga <https://miloszgilga.pl>"
+
+echo ""
+echo "====================================================================="
+echo "WARNING! Do NOT USE this version at production!"
+echo "Vault at startup is UNSEALED and KV secrets are stored in RAM memory."
+echo "====================================================================="
+echo ""
+
+for kv_storage in $(env | grep "^KV_"); do
+  IFS='=' read -r kv_storage_key kv_storage_name <<< "$kv_storage"
+
+  if [[ $kv_storage_key =~ ^KV_([A-Za-z_]+)_([0-9]+)$ ]]; then
+    kv_storage_index="${BASH_REMATCH[2]}"
+
+    for kv_secret in $(env | grep "^V_.*_${kv_storage_index}"); do
+      IFS='=' read -r kv_secret_key_with_id kv_secret_value <<< "$kv_secret"
+      kv_secret_key=$(echo "$kv_secret_key_with_id" | sed 's/_[0-9]\+$//')
+
+      secret_values["$kv_secret_key"]="$kv_secret_value"
+      secret_storages["$kv_secret_key"]="$kv_storage_name"
+
+      echo "Found KV secret: \"$kv_secret_key\" with KV storage: \"$kv_storage_name\""
+    done
+  fi
+done
+
+echo ""
+echo "Staring Vault server daemon..."
+echo ""
+
+server_port=${VAULT_AUTO_INIT_SERVER_PORT:-8200}
+root_token=${VAULT_AUTO_INIT_ROOT_TOKEN:-"admin"}
+kv_engine=${VAULT_AUTO_INIT_KV_ENGINE:-"dev"}
+
+vault server -dev \
+  -dev-listen-address="0.0.0.0:$server_port" \
+  -dev-root-token-id="$root_token" \
+  -config=/vault/config/vault.hcl &
+
+vault_daemon_pid=$!
+
+echo "Saved Vault daemon PID: \"$vault_daemon_pid\""
+echo "Wait for init Vault server..."
+
+export VAULT_ADDR="http://127.0.0.1:$server_port"
+
+while true; do
+  status_output=$(vault status)
+  initialized=$(echo "$status_output" | awk '/Initialized/{print $2}')
+  if [[ "$initialized" == "true" ]]; then
+    echo "Vault is initialized."
+    break
+  fi
+  sleep 3
+done
+
+vault secrets enable -path=$kv_engine kv
+echo "Start inserting KV secrets..."
+
+for kv_secret_key in "${!secret_values[@]}"; do
+  kv_secret_value=${secret_values[$kv_secret_key]}
+  kv_storage=${secret_storages[$kv_secret_key]}
+
+  vault kv put "$kv_engine/$kv_storage" $kv_secret_key="$kv_secret_value" > /dev/null 2>&1
+  if [[ $? -eq 0 ]]; then
+    echo "Put KV secret: \"$kv_secret_key\" into KV: \"$kv_engine/$kv_storage\""
+  fi
+done
+
+echo "Inserted: ${#secret_values[@]} KV secrets."
+
+wait $vault_daemon_pid
