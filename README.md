@@ -1,4 +1,4 @@
-# Hashicorp VAULT auto-initializer image
+# Hashicorp Vault auto-initializer image
 
 Vault with auto-initializer. Creating KV engine, KV storage and KV secrets from environment variables.
 **ONLY FOR DEV USAGE**.
