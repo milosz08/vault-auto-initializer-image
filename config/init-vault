@@ -53,7 +53,7 @@ for kv_storage in $(env | grep "^KV_"); do
       IFS='=' read -r kv_secret_key_with_id kv_secret_value <<< "$kv_secret"
       kv_secret_key=$(echo "$kv_secret_key_with_id" | sed 's/_[0-9]\+$//')
 
-      secret_data+="$kv_secret_key=$kv_secret_value "
+      secrets_data+="$kv_secret_key=$kv_secret_value "
       ((secrets_count++))
       echo "Add KV secret: \"$kv_secret_key\" with KV storage: \"$kv_engine/$kv_storage_name\""
     done
