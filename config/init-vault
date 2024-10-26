@@ -68,7 +68,7 @@ for kv_secret_key in "${!secret_values[@]}"; do
   kv_secret_value=${secret_values[$kv_secret_key]}
   kv_storage=${secret_storages[$kv_secret_key]}
 
-  vault kv put "$kv_engine/$kv_storage" $kv_secret_key="$kv_secret_value" > /dev/null 2>&1
+  vault kv put "$kv_engine/$kv_storage/$kv_secret_key" value="$kv_secret_value" > /dev/null 2>&1
   if [[ $? -eq 0 ]]; then
     echo "Put KV secret: \"$kv_secret_key\" into KV: \"$kv_engine/$kv_storage\""
   fi
