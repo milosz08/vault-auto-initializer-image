@@ -46,10 +46,10 @@ for kv_storage in $(env | grep "^KV_"); do
 
   secrets_data=""
   secrets_count=0
-  if [[ $kv_storage_key =~ ^KV_([A-Za-z_]+)_([0-9]+)$ ]]; then
+  if [[ $kv_storage_key =~ ^KV_.*_([0-9]+)$ ]]; then
     kv_storage_index="${BASH_REMATCH[2]}"
-    
-    for kv_secret in $(env | grep "^V_.*_${kv_storage_index}"); do
+
+    for kv_secret in $(env | grep "^V_.*_${kv_storage_index}$"); do
       IFS='=' read -r kv_secret_key_with_id kv_secret_value <<< "$kv_secret"
       kv_secret_key=$(echo "$kv_secret_key_with_id" | sed 's/_[0-9]\+$//')
 
