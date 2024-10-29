@@ -46,7 +46,7 @@ for kv_storage in $(env | grep "^KV_"); do
 
   secrets_data=""
   secrets_count=0
-  if [[ $kv_storage_key =~ ^KV_.*_([0-9]+)$ ]]; then
+  if [[ $kv_storage_key =~ ^KV_([A-Za-z_]+)_([0-9]+)$ ]]; then
     kv_storage_index="${BASH_REMATCH[2]}"
 
     for kv_secret in $(env | grep -w "^V_.*_${kv_storage_index}"); do
