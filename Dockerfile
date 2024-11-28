@@ -1,6 +1,9 @@
 FROM hashicorp/vault:latest
 
+RUN apk update
 RUN apk add --no-cache bash
+RUN apk add --no-cache jq
+
 SHELL ["/bin/bash", "-c"]
 
 COPY config/init-vault init-vault

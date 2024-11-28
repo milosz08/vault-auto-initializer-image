@@ -29,10 +29,11 @@ $ docker run -d \
   -e VAULT_AUTO_INIT_SERVER_PORT=<optional, by default 8200> \
   -e VAULT_AUTO_INIT_ROOT_TOKEN=<optional, by default 'admin'> \
   -e VAULT_AUTO_INIT_KV_ENGINE=<optional, by default 'dev'> \
-  -e KV_STORAGE_0=service1 \
-  -e KV_STORAGE_1=service2 \
+  -e KV_STORAGE_NORMAL_0=service1 \
+  -e KV_STORAGE_JSON_1=service2 \
   -e V_SECRET_TOKEN_0=SuperSecretToken0 \
-  -e V_SECRET_TOKEN_1=SuperSecretToken1 \
+  -e V_SECRET_TOKEN_0=SuperSecretToken1 \
+  -e KV_VALUE_JSON_1={"V_CLUSTER_NODES":[{"ip":"localhost","port":5544,"password":"secretPassword1"}]} \
   milosz08/vault-dev:latest
 ```
 - via `docker compose` file (with example KV secrets):
@@ -50,11 +51,19 @@ services:
       VAULT_AUTO_INIT_ROOT_TOKEN: # <optional, by default: 'admin'>
       VAULT_AUTO_INIT_KV_ENGINE: # <optional, by default: 'dev'>
       # kv storages
-      KV_STORAGE_0: service1
-      KV_STORAGE_1: service2
+      KV_STORAGE_NORMAL_0: service1
+      KV_STORAGE_JSON_1: service2
+      # json combined secrets
+      KV_VALUE_JSON_1: |
+        {
+          "V_CLUSTER_NODES": [
+            { "ip": "localhost", "port": 5544, "password": "secretPassword1" },
+            { "ip": "example.net", "port": 443, "password": "secretPassword2" }
+          ]
+        }
       # kv secrets
       V_SECRET_TOKEN_0: SuperSecretToken0
-      V_SECRET_TOKEN_1: SuperSecretToken1
+      V_ANOTHER_SECRET_TOKEN_0: SuperSecretToken1
     cap_add:
       - IPC_LOCK
     networks:
@@ -69,15 +78,22 @@ networks:
 
 ### How define new KV storages and secrets?
 
-- Every KV storage variable key must be defined as `KV_STORAGE_[X]`, where `[X]` is the storage identifier (as number).
+- Every KV storage variable key must be defined as `KV_STORAGE_[T]_[X]`, where `[T]` is the storage type (`NORMAL` or
+`JSON`) `[X]` is the storage identifier (as number).
 
-- Every KV secret variable key must be defined as `V_[Y]_[X]`, where `[X]` is the KV storage identifier and `[Y]` is the KV secret key identifier.
+- Every KV secret variable key must be defined as `V_[Y]_[X]`, where `[X]` is the KV storage identifier and `[Y]` is the
+KV secret key identifier.
 
-> NOTE: Prefix `V_` is also included into KV secret identifier. 
+- Every combined JSON secrets must be defined as `KV_VALUE_JSON_[X]`, where `[X]` is the storage identifier (as number).
+
+- Per one KV storage you could apply **ONLY ONE** JSON object (JSON value must be an object not an array).
+
+> NOTE: Prefix `V_` is also included into KV secret identifier.
 
 ## Todo
 
-- [ ] Add the ability to create multiple KV engines. 
+- [x] Add the ability to insert JSON values.
+- [ ] Add the ability to create multiple KV engines.
 
 ## Author
 

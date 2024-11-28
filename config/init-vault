@@ -4,10 +4,10 @@ echo "Staring Vault auto-init configuration loader..."
 echo "by Miłosz Gilga <https://miloszgilga.pl>"
 
 echo ""
-echo "====================================================================="
+echo "=============================================================="
 echo "WARNING! Do NOT USE this version at production!"
-echo "Vault at startup is UNSEALED and KV secrets are stored in RAM memory."
-echo "====================================================================="
+echo "Vault at startup is UNSEALED and KV secrets are stored in RAM."
+echo "=============================================================="
 echo ""
 echo "Staring Vault server daemon..."
 echo ""
@@ -41,30 +41,54 @@ done
 vault secrets enable -path=$kv_engine kv
 echo "Start inserting KV secrets..."
 
-for kv_storage in $(env | grep "^KV_"); do
-  IFS='=' read -r kv_storage_key kv_storage_name <<< "$kv_storage"
+for kv_storage in $(env | grep "^KV_STORAGE_"); do
+	IFS='=' read -r kv_storage_key kv_storage_name <<< "$kv_storage"
 
-  secrets_data=""
-  secrets_count=0
-  if [[ $kv_storage_key =~ ^KV_([A-Za-z_]+)_([0-9]+)$ ]]; then
-    kv_storage_index="${BASH_REMATCH[2]}"
+	secrets_data=""
+	secrets_count=0
 
-    for kv_secret in $(env | grep -w "^V_.*_${kv_storage_index}"); do
-      IFS='=' read -r kv_secret_key_with_id kv_secret_value <<< "$kv_secret"
-      kv_secret_key=$(echo "$kv_secret_key_with_id" | sed 's/_[0-9]\+$//')
+	if [[ $kv_storage_key =~ ^KV_STORAGE_(NORMAL|JSON)_([0-9]+)$ ]]; then
+		kv_storage_index="${BASH_REMATCH[2]}"
+		json_file_name="${kv_storage_name}_${kv_storage_index}.json"
 
-      secrets_data+="$kv_secret_key=$kv_secret_value "
-      ((secrets_count++))
-      echo "Add KV secret: \"$kv_secret_key\" with KV storage: \"$kv_engine/$kv_storage_name\""
-    done
-  fi
+		# normal key-value pairs
+		if [[ $kv_storage_key =~ ^KV_STORAGE_NORMAL_([0-9]+)$ ]]; then
+			echo "{" >> $json_file_name
+			first_item=true
 
-  if [[ -n "$secrets_data" ]]; then
-    vault kv put "$kv_engine/$kv_storage_name" $secrets_data > /dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
-      echo "Put KV secrets count: $secrets_count into KV: \"$kv_engine/$kv_storage\""
-    fi
-  fi
+			for kv_secret in $(env | grep -w "^V_.*_${kv_storage_index}"); do
+				IFS='=' read -r kv_secret_key_with_id kv_secret_value <<< "$kv_secret"
+				kv_secret_key=$(echo "$kv_secret_key_with_id" | sed 's/_[0-9]\+$//')
+
+				if [[ "$first_item" == true ]]; then
+					first_item=false
+				else
+					echo "," >> $json_file_name
+				fi
+				echo "\""$kv_secret_key"\": \""$kv_secret_value"\"" >> $json_file_name
+
+				((secrets_count++))
+				echo "Add KV normal secret: \"$kv_secret_key\" with KV storage: \"$kv_engine/$kv_storage_name\""
+			done
+			echo "}" >> $json_file_name
+
+		elif [[ $kv_storage_key =~ ^KV_STORAGE_JSON_([0-9]+)$ ]]; then
+			json_key="KV_VALUE_JSON_${kv_storage_index}"
+			json_value=${!json_key}
+
+			if echo "$json_value" | jq empty >/dev/null 2>&1; then
+				echo $json_value > $json_file_name
+				echo "Add KV json secret to KV storage: \"$kv_engine/$kv_storage_name\""
+			else
+				echo "Incorrect json secret format for storage: \"$kv_engine/$kv_storage_name\". Skipping."	
+			fi
+		fi
+
+		vault kv put "$kv_engine/$kv_storage_name" @$json_file_name
+		echo "Put KV secrets count: $secrets_count into KV: \"$kv_engine/$kv_storage\""
+
+		rm $json_file_name
+	fi
 done
 
 wait $vault_daemon_pid
