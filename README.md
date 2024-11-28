@@ -58,12 +58,12 @@ services:
         {
           "V_CLUSTER_NODES": [
             { "ip": "localhost", "port": 5544, "password": "secretPassword1" },
-            { "ip": "example.net", "port": 443, "password": "secretPassword2" }
+            { "ip": "example.net", "port": 443, "password": "${PASSWORD_FROM_ENV_VARIABLE}" }
           ]
         }
       # kv secrets
       V_SECRET_TOKEN_0: SuperSecretToken0
-      V_ANOTHER_SECRET_TOKEN_0: SuperSecretToken1
+      V_ANOTHER_SECRET_TOKEN_0: ${TOKEN_FROM_ENV_VARIABLE}
     cap_add:
       - IPC_LOCK
     networks:

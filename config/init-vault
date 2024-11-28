@@ -78,6 +78,8 @@ for kv_storage in $(env | grep "^KV_STORAGE_"); do
 
 			if echo "$json_value" | jq empty >/dev/null 2>&1; then
 				echo $json_value > $json_file_name
+
+				((secrets_count++))
 				echo "Add KV json secret to KV storage: \"$kv_engine/$kv_storage_name\""
 			else
 				echo "Incorrect json secret format for storage: \"$kv_engine/$kv_storage_name\". Skipping."	
