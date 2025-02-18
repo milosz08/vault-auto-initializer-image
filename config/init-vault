@@ -49,7 +49,9 @@ for kv_storage in $(env | grep "^KV_STORAGE_"); do
 
 	if [[ $kv_storage_key =~ ^KV_STORAGE_(NORMAL|JSON)_([0-9]+)$ ]]; then
 		kv_storage_index="${BASH_REMATCH[2]}"
-		json_file_name="${kv_storage_name}_${kv_storage_index}.json"
+
+		cleaned_kv_storage_id=$(echo "$kv_storage_name" | tr -cd '[:alnum:]_.-')
+		json_file_name="${cleaned_kv_storage_id}_${kv_storage_index}.json"
 
 		# normal key-value pairs
 		if [[ $kv_storage_key =~ ^KV_STORAGE_NORMAL_([0-9]+)$ ]]; then
