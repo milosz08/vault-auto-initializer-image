@@ -7,7 +7,7 @@ on:
     paths:
       - config/**
       - Dockerfile
-      - .github/workflows/docker-build-deploy.yml
+      - .github/workflows/docker-image.yml
 
 jobs:
   build:
