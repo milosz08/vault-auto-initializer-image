@@ -101,7 +101,7 @@ Image wrapper created by Miłosz Gilga.
 <br>
 Original Vault image created by [Hashicorp Vault](https://github.com/hashicorp/vault/blob/main/Dockerfile).
 <br>
-If you have any questions about this software send message: [personal@miloszgilga.pl](mailto:personal@miloszgilga.pl).
+If you have any questions about this software send message: [miloszgilga@gmail.com](mailto:miloszgilga@gmail.com).
 
 ## License
 This software is on GNU-GPL 3.0 license.
