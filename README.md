@@ -88,7 +88,8 @@ KV secret key identifier.
 
 - Per one KV storage you could apply **ONLY ONE** JSON object (JSON value must be an object not an array).
 
-> NOTE: Prefix `V_` is also included into KV secret identifier.
+> [!IMPORTANT]
+> Prefix `V_` is also included into KV secret identifier.
 
 ## Todo
 
